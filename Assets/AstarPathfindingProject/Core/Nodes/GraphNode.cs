@@ -48,13 +48,13 @@ namespace Pathfinding {
 		}
 
 		public override int GetHashCode () {
-			return node.GetHashCode() ^ (int)cost;
+			return node.GetHashCode() ^ (int)cost * (int) tag;
 		}
 
 		public override bool Equals (object obj) {
 			if (obj == null) return false;
 			var conn = (Connection)obj;
-			return conn.node == node && conn.cost == cost && conn.shapeEdge == shapeEdge;
+			return conn.node == node && conn.cost == cost && conn.tag == tag && conn.shapeEdge == shapeEdge;
 		}
 	}
 
