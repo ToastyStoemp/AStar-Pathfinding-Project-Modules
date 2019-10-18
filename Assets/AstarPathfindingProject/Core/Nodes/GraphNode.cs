@@ -17,6 +17,15 @@ namespace Pathfinding {
 		public uint cost;
 
 		/// <summary>
+		/// Bitpacked field holding several pieces of data.
+		/// See: Walkable
+		/// See: Area
+		/// See: GraphIndex
+		/// See: Tag
+		/// </summary>
+		public uint tag;
+
+		/// <summary>
 		/// Side of the node shape which this connection uses.
 		/// Used for mesh nodes.
 		/// A value of 0 corresponds to using the side for vertex 0 and vertex 1 on the node. 1 corresponds to vertex 1 and 2, etc.
@@ -31,9 +40,10 @@ namespace Pathfinding {
 		/// </summary>
 		public byte shapeEdge;
 
-		public Connection (GraphNode node, uint cost, byte shapeEdge = 0xFF) {
+		public Connection (GraphNode node, uint cost, uint tag, byte shapeEdge = 0xFF) {
 			this.node = node;
 			this.cost = cost;
+			this.tag = tag;
 			this.shapeEdge = shapeEdge;
 		}
 
