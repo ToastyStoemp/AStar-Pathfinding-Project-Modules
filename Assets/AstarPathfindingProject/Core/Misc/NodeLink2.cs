@@ -41,6 +41,8 @@ namespace Pathfinding {
 		/// </summary>
 		public float costFactor = 1.0f;
 
+		public uint tag;
+
 		/// <summary>Make a one-way connection</summary>
 		public bool oneWay = false;
 
@@ -193,8 +195,8 @@ namespace Pathfinding {
 			RemoveConnections(endNode);
 
 			uint cost = (uint)Mathf.RoundToInt(((Int3)(StartTransform.position-EndTransform.position)).costMagnitude*costFactor);
-			startNode.AddConnection(endNode, cost);
-			endNode.AddConnection(startNode, cost);
+			startNode.AddConnection(endNode, cost, tag);
+			endNode.AddConnection(startNode, cost, tag);
 
 			if (connectedNode1 == null || forceNewCheck) {
 				var info = AstarPath.active.GetNearest(StartTransform.position, nn);
@@ -211,11 +213,11 @@ namespace Pathfinding {
 			if (connectedNode2 == null || connectedNode1 == null) return;
 
 			//Add connections between nodes, or replace old connections if existing
-			connectedNode1.AddConnection(startNode, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor));
-			if (!oneWay) connectedNode2.AddConnection(endNode, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor));
+			connectedNode1.AddConnection(startNode, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor), tag);
+			if (!oneWay) connectedNode2.AddConnection(endNode, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor), tag);
 
-			if (!oneWay) startNode.AddConnection(connectedNode1, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor));
-			endNode.AddConnection(connectedNode2, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor));
+			if (!oneWay) startNode.AddConnection(connectedNode1, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor), tag);
+			endNode.AddConnection(connectedNode2, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor), tag);
 		}
 
 		private readonly static Color GizmosColor = new Color(206.0f/255.0f, 136.0f/255.0f, 48.0f/255.0f, 0.5f);

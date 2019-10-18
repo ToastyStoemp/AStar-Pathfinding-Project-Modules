@@ -414,7 +414,7 @@ namespace Pathfinding {
 		/// }));
 		/// </code>
 		/// </summary>
-		public abstract void AddConnection (GraphNode node, uint cost);
+		public abstract void AddConnection (GraphNode node, uint cost, uint flag);
 
 		/// <summary>
 		/// Removes any connection from this node to the specified node.
@@ -659,8 +659,8 @@ namespace Pathfinding {
 		/// </summary>
 		/// <param name="node">Node to add a connection to</param>
 		/// <param name="cost">Cost of traversing the connection. A cost of 1000 corresponds approximately to the cost of moving 1 world unit.</param>
-		public override void AddConnection (GraphNode node, uint cost) {
-			AddConnection(node, cost, -1);
+		public override void AddConnection (GraphNode node, uint cost, uint tag) {
+			AddConnection(node, cost, tag, -1);
 		}
 
 		/// <summary>
@@ -676,7 +676,7 @@ namespace Pathfinding {
 		/// <param name="node">Node to add a connection to</param>
 		/// <param name="cost">Cost of traversing the connection. A cost of 1000 corresponds approximately to the cost of moving 1 world unit.</param>
 		/// <param name="shapeEdge">Which edge on the shape of this node to use or -1 if no edge is used.</param>
-		public void AddConnection (GraphNode node, uint cost, int shapeEdge) {
+		public void AddConnection (GraphNode node, uint cost, uint tag, int shapeEdge) {
 			if (node == null) throw new System.ArgumentNullException();
 
 			// Check if we already have a connection to the node
@@ -685,6 +685,7 @@ namespace Pathfinding {
 					if (connections[i].node == node) {
 						// Just update the cost for the existing connection
 						connections[i].cost = cost;
+						connections[i].tag = tag;
 						// Update edge only if it was a definite edge, otherwise reuse the existing one
 						// This makes it possible to use the AddConnection(node,cost) overload to only update the cost
 						// without changing the edge which is required for backwards compatibility.

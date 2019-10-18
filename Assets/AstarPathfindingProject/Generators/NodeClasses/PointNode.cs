@@ -105,7 +105,7 @@ namespace Pathfinding {
 		/// }));
 		/// </code>
 		/// </summary>
-		public override void AddConnection (GraphNode node, uint cost) {
+		public override void AddConnection (GraphNode node, uint cost, uint tag) {
 			if (node == null) throw new System.ArgumentNullException();
 
 			if (connections != null) {
@@ -124,7 +124,7 @@ namespace Pathfinding {
 				newconns[i] = connections[i];
 			}
 
-			newconns[connLength] = new Connection(node, cost);
+			newconns[connLength] = new Connection(node, cost, tag);
 
 			connections = newconns;
 			AstarPath.active.hierarchicalGraph.AddDirtyNode(this);
@@ -255,7 +255,7 @@ namespace Pathfinding {
 				connections = new Connection[count];
 
 				for (int i = 0; i < count; i++) {
-					connections[i] = new Connection(ctx.DeserializeNodeReference(), ctx.reader.ReadUInt32());
+					connections[i] = new Connection(ctx.DeserializeNodeReference(), ctx.reader.ReadUInt32(), ctx.reader.ReadUInt32());
 				}
 			}
 		}

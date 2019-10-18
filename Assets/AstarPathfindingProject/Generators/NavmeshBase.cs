@@ -740,8 +740,8 @@ namespace Pathfinding {
 											VectorMath.SqrDistanceSegmentSegment((Vector3)aVertex1, (Vector3)aVertex2, (Vector3)bVertex1, (Vector3)bVertex2) < MaxTileConnectionEdgeDistance*MaxTileConnectionEdgeDistance) {
 											uint cost = (uint)(nodeA.position - nodeB.position).costMagnitude;
 
-											nodeA.AddConnection(nodeB, cost, a);
-											nodeB.AddConnection(nodeA, cost, b);
+											nodeA.AddConnection(nodeB, cost, 0, a);
+											nodeB.AddConnection(nodeA, cost, 0, b);
 										}
 									}
 								}

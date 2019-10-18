@@ -27,6 +27,8 @@ namespace Pathfinding {
 		/// </summary>
 		public float costFactor = 1.0f;
 
+		public uint tag = 0;
+
 		/// <summary>Make a one-way connection</summary>
 		public bool oneWay = false;
 
@@ -81,9 +83,9 @@ namespace Pathfinding {
 			} else {
 				uint cost = (uint)System.Math.Round((startNode.position-endNode.position).costMagnitude*costFactor);
 
-				startNode.AddConnection(endNode, cost);
+				startNode.AddConnection(endNode, cost,tag);
 				if (!oneWay)
-					endNode.AddConnection(startNode, cost);
+					endNode.AddConnection(startNode, cost,tag);
 			}
 		}
 
