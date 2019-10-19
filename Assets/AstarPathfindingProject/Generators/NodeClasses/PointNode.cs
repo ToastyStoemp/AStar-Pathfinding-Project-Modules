@@ -112,6 +112,7 @@ namespace Pathfinding {
 				for (int i = 0; i < connections.Length; i++) {
 					if (connections[i].node == node) {
 						connections[i].cost = cost;
+						connections[i].tag = tag;
 						return;
 					}
 				}
@@ -193,6 +194,7 @@ namespace Pathfinding {
 						pathOther.pathID = handler.PathID;
 
 						pathOther.cost = connections[i].cost;
+						pathOther.tag = connections[i].tag;
 
 						pathOther.H = path.CalculateHScore(other);
 						pathOther.UpdateG(path);
@@ -201,9 +203,11 @@ namespace Pathfinding {
 					} else {
 						//If not we can test if the path from this node to the other one is a better one then the one already used
 						uint tmpCost = connections[i].cost;
+						uint tmpTag = connections[i].tag;
 
 						if (pathNode.G + tmpCost + path.GetTraversalCost(other) < pathOther.G) {
 							pathOther.cost = tmpCost;
+							pathOther.tag = tmpTag;
 							pathOther.parent = pathNode;
 
 							other.UpdateRecursiveG(path, pathOther, handler);
@@ -241,6 +245,7 @@ namespace Pathfinding {
 				ctx.writer.Write(connections.Length);
 				for (int i = 0; i < connections.Length; i++) {
 					ctx.SerializeNodeReference(connections[i].node);
+					ctx.writer.Write(connections[i].tag);
 					ctx.writer.Write(connections[i].cost);
 				}
 			}

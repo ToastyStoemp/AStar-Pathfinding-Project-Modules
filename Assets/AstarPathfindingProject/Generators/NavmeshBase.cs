@@ -1615,7 +1615,7 @@ namespace Pathfinding {
 				GetNodes(node => {
 					var triNode = node as TriangleMeshNode;
 					foreach (var conn in conns[triNode].Where(conn => !triNode.ContainsConnection(conn.node)).ToList()) {
-						triNode.AddConnection(conn.node, conn.cost, conn.shapeEdge);
+						triNode.AddConnection(conn.node, conn.cost, conn.tag, conn.shapeEdge);
 					}
 				});
 			}

@@ -251,11 +251,13 @@ namespace Pathfinding {
 					}
 
 					uint cost = conn.cost;
+					uint tag = conn.tag;
 
 					if (flag2 || pathOther.flag2) {
 						// Get special connection cost from the path
 						// This is used by the start and end nodes
 						cost = path.GetConnectionSpecialCost(this, conn.node, cost);
+						tag = path.GetTagPenalty((int)tag);
 					}
 
 					// Test if we have seen the other node before
@@ -271,6 +273,7 @@ namespace Pathfinding {
 						pathOther.pathID = handler.PathID;
 
 						pathOther.cost = cost;
+						pathOther.tag = tag;
 
 						pathOther.H = path.CalculateHScore(other);
 						pathOther.UpdateG(path);
@@ -280,6 +283,7 @@ namespace Pathfinding {
 						// If not we can test if the path from this node to the other one is a better one than the one already used
 						if (pathNode.G + cost + path.GetTraversalCost(other) < pathOther.G) {
 							pathOther.cost = cost;
+							pathOther.tag = tag;
 							pathOther.parent = pathNode;
 
 							other.UpdateRecursiveG(path, pathOther, handler);

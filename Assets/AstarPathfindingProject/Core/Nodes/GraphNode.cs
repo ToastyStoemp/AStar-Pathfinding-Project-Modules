@@ -796,6 +796,7 @@ namespace Pathfinding {
 				for (int i = 0; i < connections.Length; i++) {
 					ctx.SerializeNodeReference(connections[i].node);
 					ctx.writer.Write(connections[i].cost);
+					ctx.writer.Write(connections[i].tag);
 					ctx.writer.Write(connections[i].shapeEdge);
 				}
 			}

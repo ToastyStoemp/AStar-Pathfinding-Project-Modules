@@ -229,12 +229,14 @@ namespace Pathfinding {
 					PathNode otherPN = handler.GetPathNode(other);
 
 					uint tmpCost = connections[i].cost;
+					uint tmpTag = connections[i].tag;
 
 					if (otherPN.pathID != pid) {
 						otherPN.parent = pathNode;
 						otherPN.pathID = pid;
 
 						otherPN.cost = tmpCost;
+						otherPN.tag = tmpTag;
 
 						otherPN.H = path.CalculateHScore(other);
 						otherPN.UpdateG(path);
@@ -279,6 +281,7 @@ namespace Pathfinding {
 				for (int i = 0; i < connections.Length; i++) {
 					if (connections[i].node == node) {
 						connections[i].cost = cost;
+						connections[i].tag = tag;
 						return;
 					}
 				}
@@ -336,6 +339,7 @@ namespace Pathfinding {
 				for (int i = 0; i < connections.Length; i++) {
 					ctx.SerializeNodeReference(connections[i].node);
 					ctx.writer.Write(connections[i].cost);
+					ctx.writer.Write(connections[i].tag);
 				}
 			}
 		}

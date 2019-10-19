@@ -35,8 +35,12 @@ namespace Pathfinding {
 		private uint flags;
 
 		/// <summary>Cost uses the first 28 bits</summary>
-		private const uint CostMask = (1U << 28) - 1U;
-
+		private const uint CostMask = (1U << 14) - 1U;
+		/// <summary>Start of tag bits. See: <see cref="Tag"/></summary>
+		const int FlagsTagOffset = 14;
+		/// <summary>Mask of tag bits. See: <see cref="Tag"/></summary>
+		const uint FlagsTagMask = ((1 << 14) - 1) << FlagsTagOffset;
+		
 		/// <summary>Flag 1 is at bit 28</summary>
 		private const int Flag1Offset = 28;
 		private const uint Flag1Mask = (uint)(1 << Flag1Offset);
@@ -51,6 +55,15 @@ namespace Pathfinding {
 			}
 			set {
 				flags = (flags & ~CostMask) | value;
+			}
+		}
+		
+		public uint tag {
+			get {
+				return (flags & FlagsTagMask) >> FlagsTagOffset;
+			}
+			set {
+				flags = flags & ~FlagsTagMask | ((value << FlagsTagOffset) & FlagsTagMask);
 			}
 		}
 
