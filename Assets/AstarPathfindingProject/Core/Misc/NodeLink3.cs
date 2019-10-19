@@ -62,7 +62,8 @@ namespace Pathfinding {
 		/// </summary>
 		public float costFactor = 1.0f;
 
-		public uint tag = 0;
+		[HideInInspector]
+		public int setTag;
 
 		/// <summary>Make a one-way connection</summary>
 		public bool oneWay = false;
@@ -231,8 +232,8 @@ namespace Pathfinding {
 			RemoveConnections(endNode);
 
 			uint cost = (uint)Mathf.RoundToInt(((Int3)(StartTransform.position-EndTransform.position)).costMagnitude*costFactor);
-			startNode.AddConnection(endNode, cost, tag);
-			endNode.AddConnection(startNode, cost, tag);
+			startNode.AddConnection(endNode, cost, (uint)setTag);
+			endNode.AddConnection(startNode, cost, (uint)setTag);
 
 			Int3 dir = connectedNode2.position - connectedNode1.position;
 
@@ -268,11 +269,11 @@ namespace Pathfinding {
 							endNode.portalB = pa;
 
 							//Add connections between nodes, or replace old connections if existing
-							connectedNode1.AddConnection(startNode, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor), tag);
-							connectedNode2.AddConnection(endNode, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor), tag);
+							connectedNode1.AddConnection(startNode, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor), (uint)setTag);
+							connectedNode2.AddConnection(endNode, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor), (uint)setTag);
 
-							startNode.AddConnection(connectedNode1, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor), tag);
-							endNode.AddConnection(connectedNode2, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor), tag);
+							startNode.AddConnection(connectedNode1, (uint)Mathf.RoundToInt(((Int3)(clamped1 - StartTransform.position)).costMagnitude*costFactor), (uint)setTag);
+							endNode.AddConnection(connectedNode2, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor), (uint)setTag);
 
 							return;
 						}
