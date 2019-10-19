@@ -34,10 +34,10 @@ namespace Pathfinding {
 		/// <summary>Bitpacked variable which stores several fields</summary>
 		private uint flags;
 
-		/// <summary>Cost uses the first 28 bits</summary>
-		private const uint CostMask = (1U << 14) - 1U;
+		/// <summary>Cost uses the first 23 bits</summary>
+		private const uint CostMask = (1U << 23) - 1U;
 		/// <summary>Start of tag bits. See: <see cref="Tag"/></summary>
-		const int FlagsTagOffset = 14;
+		const int FlagsTagOffset = 23;
 		/// <summary>Mask of tag bits. See: <see cref="Tag"/></summary>
 		const uint FlagsTagMask = (32 - 1) << FlagsTagOffset;
 		
