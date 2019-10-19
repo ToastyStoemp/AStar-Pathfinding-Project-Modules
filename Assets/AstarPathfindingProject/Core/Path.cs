@@ -11,6 +11,7 @@ namespace Pathfinding {
 	/// </summary>
 	public interface ITraversalProvider {
 		bool CanTraverse (Path path, GraphNode node);
+		bool CanTraverseConnection (Path path, Connection conn);
 		uint GetTraversalCost (Path path, GraphNode node);
 	}
 
@@ -18,6 +19,10 @@ namespace Pathfinding {
 	public static class DefaultITraversalProvider {
 		public static bool CanTraverse (Path path, GraphNode node) {
 			return node.Walkable && (path.enabledTags >> (int)node.Tag & 0x1) != 0;
+		}
+		
+		public static bool CanTraverseConnection (Path path, Connection conn) {
+			return (path.enabledTags >> (int)conn.tag & 0x1) != 0;
 		}
 
 		public static uint GetTraversalCost (Path path, GraphNode node) {
@@ -379,6 +384,13 @@ namespace Pathfinding {
 		/// This per default equals to if the connections tag is included in <see cref="enabledTags"/>
 		/// </summary>
 		internal bool CanTraverseConnection (Connection conn) {
+			// Use traversal provider if set, otherwise fall back on default behaviour
+			// This method is hot, but this branch is extremely well predicted so it
+			// doesn't affect performance much (profiling indicates it is just above
+			// the noise level, somewhere around 0%-0.3%)
+			if (traversalProvider != null)
+				return traversalProvider.CanTraverseConnection(this, conn);
+
 			unchecked { return (enabledTags >> (int)conn.tag & 0x1) != 0; }
 		}
 
