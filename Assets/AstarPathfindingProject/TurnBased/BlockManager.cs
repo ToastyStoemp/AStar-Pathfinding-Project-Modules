@@ -66,6 +66,11 @@ namespace Pathfinding {
 				}
 			}
 
+			public bool CanTraverseConnection(Path path, Connection conn)
+			{
+				return true;
+			}
+
 			public uint GetTraversalCost (Path path, GraphNode node) {
 				// Same as default implementation
 				return path.GetTagPenalty((int)node.Tag) + node.Penalty;
