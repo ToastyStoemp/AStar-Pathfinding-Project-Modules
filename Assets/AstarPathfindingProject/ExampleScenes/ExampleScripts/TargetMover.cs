@@ -16,6 +16,7 @@ namespace Pathfinding {
 		public LayerMask mask;
 
 		public Transform target;
+		public Transform target2;
 		IAstarAI[] ais;
 
 		/// <summary>Determines if the target position should be updated every frame or only on double-click</summary>
@@ -34,19 +35,22 @@ namespace Pathfinding {
 		}
 
 		public void OnGUI () {
-			if (onlyOnDoubleClick && cam != null && Event.current.type == EventType.MouseDown && Event.current.clickCount == 2) {
-				UpdateTargetPosition();
+			if (onlyOnDoubleClick && cam != null && Event.current.type == EventType.MouseDown && Event.current.clickCount == 2 && Event.current.button == 0) {
+				UpdateTargetPosition(target);
+			}
+			if (onlyOnDoubleClick && cam != null && Event.current.type == EventType.MouseDown && Event.current.clickCount == 2 && Event.current.button == 1) {
+				UpdateTargetPosition(target2);
 			}
 		}
 
 		/// <summary>Update is called once per frame</summary>
 		void Update () {
 			if (!onlyOnDoubleClick && cam != null) {
-				UpdateTargetPosition();
+				UpdateTargetPosition(target);
 			}
 		}
 
-		public void UpdateTargetPosition () {
+		public void UpdateTargetPosition(Transform target1) {
 			Vector3 newPosition = Vector3.zero;
 			bool positionFound = false;
 
@@ -63,8 +67,8 @@ namespace Pathfinding {
 				}
 			}
 
-			if (positionFound && newPosition != target.position) {
-				target.position = newPosition;
+			if (positionFound && newPosition != target1.position) {
+				target1.position = newPosition;
 
 				if (onlyOnDoubleClick) {
 					for (int i = 0; i < ais.Length; i++) {
