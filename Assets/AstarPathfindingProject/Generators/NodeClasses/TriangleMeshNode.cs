@@ -256,6 +256,9 @@ namespace Pathfinding {
 					if (flag2 || pathOther.flag2) {
 						// Get special connection cost from the path
 						// This is used by the start and end nodes
+						if (!path.CanTraverseConnection(conn))
+							continue;
+						
 						cost = path.GetConnectionSpecialCost(this, conn.node, cost);
 						tag = path.GetTagPenalty((int)tag);
 					}

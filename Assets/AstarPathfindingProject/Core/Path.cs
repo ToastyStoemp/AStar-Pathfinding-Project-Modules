@@ -373,6 +373,14 @@ namespace Pathfinding {
 
 			unchecked { return node.Walkable && (enabledTags >> (int)node.Tag & 0x1) != 0; }
 		}
+		
+		/// <summary>
+		/// Returns if the connection to the node can be traversed.
+		/// This per default equals to if the connections tag is included in <see cref="enabledTags"/>
+		/// </summary>
+		internal bool CanTraverseConnection (Connection conn) {
+			unchecked { return (enabledTags >> (int)conn.tag & 0x1) != 0; }
+		}
 
 		internal uint GetTraversalCost (GraphNode node) {
 #if ASTAR_NO_TRAVERSAL_COST
