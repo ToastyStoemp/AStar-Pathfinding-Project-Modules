@@ -703,7 +703,7 @@ namespace Pathfinding {
 				newconns[i] = connections[i];
 			}
 
-			newconns[connLength] = new Connection(node, cost, 0, (byte)shapeEdge);
+			newconns[connLength] = new Connection(node, cost, tag, (byte)shapeEdge);
 
 			if (connections != null) {
 				ArrayPool<Connection>.Release(ref connections, true);
