@@ -39,7 +39,7 @@ namespace Pathfinding {
 		/// <summary>Start of tag bits. See: <see cref="Tag"/></summary>
 		const int FlagsTagOffset = 14;
 		/// <summary>Mask of tag bits. See: <see cref="Tag"/></summary>
-		const uint FlagsTagMask = ((1 << 14) - 1) << FlagsTagOffset;
+		const uint FlagsTagMask = (32 - 1) << FlagsTagOffset;
 		
 		/// <summary>Flag 1 is at bit 28</summary>
 		private const int Flag1Offset = 28;
