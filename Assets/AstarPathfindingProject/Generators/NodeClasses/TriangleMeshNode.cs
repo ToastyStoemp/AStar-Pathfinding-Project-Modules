@@ -253,6 +253,7 @@ namespace Pathfinding {
 					uint cost = conn.cost;
 					uint tag = conn.tag;
 
+					//TODO:flag2 might be false when there is no cost for the connection
 					if (flag2 || pathOther.flag2) {
 						// Get special connection cost from the path
 						// This is used by the start and end nodes
