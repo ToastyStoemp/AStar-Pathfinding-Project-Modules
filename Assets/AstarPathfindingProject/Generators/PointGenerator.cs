@@ -513,7 +513,8 @@ namespace Pathfinding {
 										other,
 										/// <summary>TODO: Is this equal to .costMagnitude</summary>
 										(uint)Mathf.RoundToInt(dist*Int3.FloatPrecision),
-										0
+										0,
+											0
 										));
 							}
 						}
@@ -529,6 +530,7 @@ namespace Pathfinding {
 										other,
 										/// <summary>TODO: Is this equal to .costMagnitude</summary>
 										(uint)Mathf.RoundToInt(dist*Int3.FloatPrecision),
+											0,
 											0
 										));
 							}
@@ -650,7 +652,7 @@ namespace Pathfinding {
 							if (!contains && validConnection) {
 								// A new connection should be added
 								uint cost = (uint)Mathf.RoundToInt(dist*Int3.FloatPrecision);
-								conn.Add(new Connection(other, cost, 0));
+								conn.Add(new Connection(other, cost, 0, 0));
 								RegisterConnectionLength((other.position - node.position).sqrMagnitudeLong);
 							} else if (contains && !validConnection) {
 								// A connection should be removed

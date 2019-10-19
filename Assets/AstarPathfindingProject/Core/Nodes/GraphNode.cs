@@ -703,7 +703,7 @@ namespace Pathfinding {
 				newconns[i] = connections[i];
 			}
 
-			newconns[connLength] = new Connection(node, cost, (byte)shapeEdge);
+			newconns[connLength] = new Connection(node, cost, 0, (byte)shapeEdge);
 
 			if (connections != null) {
 				ArrayPool<Connection>.Release(ref connections, true);
@@ -813,6 +813,7 @@ namespace Pathfinding {
 				for (int i = 0; i < count; i++) {
 					connections[i] = new Connection(
 						ctx.DeserializeNodeReference(),
+						ctx.reader.ReadUInt32(),
 						ctx.reader.ReadUInt32(),
 						ctx.meta.version < AstarSerializer.V4_1_0 ? (byte)0xFF : ctx.reader.ReadByte()
 						);

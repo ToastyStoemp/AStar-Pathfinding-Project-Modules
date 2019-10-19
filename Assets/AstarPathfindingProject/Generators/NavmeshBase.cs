@@ -607,6 +607,7 @@ namespace Pathfinding {
 								connections.Add(new Connection(
 										other,
 										(uint)(node.position - other.position).costMagnitude,
+										0,
 										(byte)a
 										));
 								break;
