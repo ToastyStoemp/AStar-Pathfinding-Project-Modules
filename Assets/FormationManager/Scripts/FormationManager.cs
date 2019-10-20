@@ -24,8 +24,9 @@ public class FormationManager : MonoBehaviour
     private Vector3 formationCenterPoint;
     private Quaternion formationCenterRotation;
 
-    public FormationPoint[] formationPoints;
+    private FormationPoint[] formationPoints;
 
+    public bool enableDebug;
     public GameObject debugObject;
 
     // Start is called before the first frame update
@@ -43,10 +44,12 @@ public class FormationManager : MonoBehaviour
         {
             for (int j = 0; j < columnCount; j++)
             {
-                formationPoints[i * columnCount + j] = new FormationPoint()
+                FormationPoint newFormationPoint = formationPoints[i * columnCount + j] = new FormationPoint();
+
+                if (enableDebug)
                 {
-                    debugTransform = Instantiate(debugObject).transform
-                };
+                    newFormationPoint.debugTransform = Instantiate(debugObject).transform;
+                }
             }
         }
 
@@ -81,12 +84,15 @@ public class FormationManager : MonoBehaviour
                 currentFormationPoint.position = resultMatrix.GetPosition();
                 currentFormationPoint.rotation = resultMatrix.GetRotation();
 
-                UpdateDebugTransform(currentFormationPoint);
+                if (enableDebug)
+                {
+                    UpdateDebugTransform(currentFormationPoint);
+                }
             }
         }
     }
 
-    private void UpdateDebugTransform(FormationPoint currentFormationPoint)
+    private static void UpdateDebugTransform(FormationPoint currentFormationPoint)
     {
         currentFormationPoint.debugTransform.position = currentFormationPoint.position;
         currentFormationPoint.debugTransform.rotation = currentFormationPoint.rotation;
