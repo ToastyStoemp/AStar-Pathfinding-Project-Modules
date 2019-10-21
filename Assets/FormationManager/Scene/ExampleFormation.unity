@@ -1788,7 +1788,7 @@ MonoBehaviour:
   rowSpacing: 1
   columnSpacing: 1
   formationCenterTransform: {fileID: 750667742}
-  formationPoints: []
+  enableDebug: 1
   debugObject: {fileID: 2596215064058882498, guid: 33827831b58a9004095a9a148d3288a1,
     type: 3}
 --- !u!4 &1011236118
