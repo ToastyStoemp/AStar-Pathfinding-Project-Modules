@@ -1,5 +1,6 @@
 ﻿using System;
 using Extensions;
+using Pathfinding;
 using UnityEngine;
 
 [Serializable]
@@ -23,9 +24,15 @@ public class FormationManager : MonoBehaviour
     public Transform formationCenterTransform;
     private Vector3 formationCenterPoint;
     private Quaternion formationCenterRotation;
+    
+    private Quaternion previousRotation;
+    private int previousTransposeDirection;
 
     private FormationPoint[] formationPoints;
+    private AIBase[][] agents;
 
+    public GameObject agent;
+    
     public bool enableDebug;
     public GameObject debugObject;
 
@@ -39,12 +46,14 @@ public class FormationManager : MonoBehaviour
     {
         totalCount = rowCount * columnCount;
         formationPoints = new FormationPoint [totalCount];
+        agents = new AIBase[rowCount][];
 
         for (int i = 0; i < rowCount; i++)
         {
             for (int j = 0; j < columnCount; j++)
             {
-                FormationPoint newFormationPoint = formationPoints[i * columnCount + j] = new FormationPoint();
+                FormationPoint newFormationPoint = new FormationPoint();
+                formationPoints[i * columnCount + j] = newFormationPoint;
 
                 if (enableDebug)
                 {
@@ -53,6 +62,19 @@ public class FormationManager : MonoBehaviour
             }
         }
 
+        for (int i = 0; i < rowCount; i++)
+        {
+            agents[i] = new AIBase [columnCount];
+            
+            for (int j = 0; j < columnCount; j++)
+            {
+                AIBase newAgent = Instantiate(agent).GetComponent<AIBase>();
+                agents[i][j] = newAgent;
+            }
+        }
+        
+        previousRotation = formationCenterTransform != null ? formationCenterTransform.rotation : transform.rotation;
+        
         UpdateFormation();
     }
 
@@ -98,9 +120,88 @@ public class FormationManager : MonoBehaviour
         currentFormationPoint.debugTransform.rotation = currentFormationPoint.rotation;
     }
     
+    private void CheckNeedAgentMatrixRotation()
+    {
+        float angleDiff = Mathf.DeltaAngle(previousRotation.eulerAngles.y, formationCenterRotation.eulerAngles.y);
+        if ((previousTransposeDirection == 0 || Math.Abs(previousTransposeDirection - Mathf.Sign(angleDiff)) > 0.1f) && angleDiff > 45)
+        {
+            RotateAgentMatrix(angleDiff);
+        }
+        else if (Math.Abs(previousTransposeDirection - Mathf.Sign(angleDiff)) < 0.1f && angleDiff > 90)
+        {
+            RotateAgentMatrix(angleDiff);
+        }
+    }
+
+    private void RotateAgentMatrix(float angleDiff)
+    {
+        //RelocateAgents
+        previousRotation = formationCenterRotation;
+        previousTransposeDirection = (int) Mathf.Sign(angleDiff);
+        
+        if (previousTransposeDirection < 0)
+        {
+            RotateAgentMatrixClockWise();
+        }
+        else
+        {
+            RotateAgentMatrixCounterClockWise();
+        }
+    }
+
+    private void RotateAgentMatrixClockWise()
+    {
+        float x  = Mathf.Floor(rowCount / 2f);
+        int y  = rowCount - 1;
+        
+        for (int i = 0; i < x; i++)
+        {
+            for (int j = i; j < y - i; j++)
+            {
+                AIBase swapAgent = agents[i][j];
+                agents[i][j] = agents[y - j][i];
+                agents[y - j][i] = agents[y - i][y - j];
+                agents[y - i][y - j] = agents[j][y - i];
+                agents[j][y - i] = swapAgent;
+            }
+        }
+    }
+    
+    private void RotateAgentMatrixCounterClockWise()
+    {
+        float x  = Mathf.Floor(rowCount / 2f);
+        int y  = rowCount - 1;
+        
+        for (int i = 0; i < x; i++)
+        {
+            for (int j = i; j < y - i; j++)
+            {
+                AIBase swapAgent = agents[j][i];
+                agents[j][i] = agents[i][y - j];
+                agents[i][y - j] = agents[y - j][y - i];
+                agents[y - j][y - i] = agents[y - i][j];
+                agents[y - i][j] = swapAgent;
+            }
+        }
+    }
+
+    public void UpdateAgentsDestination()
+    {
+        for (int i = 0; i < rowCount; i++)
+        {
+            for (int j = 0; j < columnCount; j++)
+            {
+                AIBase currentAgent = agents[i][j];
+                currentAgent.destination = formationPoints[i * columnCount + j].position;
+            }
+        }
+    }
+    
     // Update is called once per frame
     private void Update()
     {
         UpdateFormation();
+        CheckNeedAgentMatrixRotation();
+        UpdateAgentsDestination();
     }
 }
