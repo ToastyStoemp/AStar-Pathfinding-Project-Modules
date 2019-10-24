@@ -31,6 +31,32 @@ namespace Pathfinding {
 		public static bool IsPathPossible (GraphNode node1, GraphNode node2) {
 			return node1.Walkable && node2.Walkable && node1.Area == node2.Area;
 		}
+		
+		/// <summary>
+		/// Returns if there are walkable paths between two given nodes.
+		/// See: graph-updates (view in online documentation for working links)
+		///
+		/// Warning: This method is significantly slower than the IsPathPossible method which does not take a ITraversableProvider
+		///
+		/// See: <see cref="AstarPath.GetNearest"/>
+		/// </summary>
+		public static bool IsPathPossible (GraphNode node1, GraphNode node2, ITraversalProvider traversable) {
+			Path emptyPath = new ConstantPath();
+
+			// Check if start and end node are reachable
+			if (!node1.Walkable || !node2.Walkable || node1.Area != node2.Area) return false;
+			if (!traversable.CanTraverse(emptyPath, node1)) return false;
+			if (!traversable.CanTraverse(emptyPath, node2)) return false;
+
+			// Make sure that the first node can reach all other nodes
+			var reachable = GetReachableNodes(node1, traversable);
+			bool result = reachable.Contains(node2);
+			
+			// Pool the temporary list
+			ListPool<GraphNode>.Release(ref reachable);
+
+			return result;
+		}
 
 		/// <summary>
 		/// Returns if there are walkable paths between all nodes.
@@ -75,6 +101,49 @@ namespace Pathfinding {
 
 			// Make sure that the first node can reach all other nodes
 			var reachable = GetReachableNodes(nodes[0], tagMask);
+			bool result = true;
+
+			// Make sure that the first node can reach all other nodes
+			for (int i = 1; i < nodes.Count; i++) {
+				if (!reachable.Contains(nodes[i])) {
+					result = false;
+					break;
+				}
+			}
+
+			// Pool the temporary list
+			ListPool<GraphNode>.Release(ref reachable);
+
+			return result;
+		}
+		
+		/// <summary>
+		/// Returns if there are walkable paths between all nodes.
+		/// See: graph-updates (view in online documentation for working links)
+		///
+		/// This method will actually only check if the first node can reach all other nodes. However this is
+		/// equivalent in 99% of the cases since almost always the graph connections are bidirectional.
+		/// If you are not aware of any cases where you explicitly create unidirectional connections
+		/// this method can be used without worries.
+		///
+		/// Returns true for empty lists
+		///
+		/// Warning: This method is significantly slower than the IsPathPossible method which does not take a ITraversableProvider
+		///
+		/// See: <see cref="AstarPath.GetNearest"/>
+		/// </summary>
+		public static bool IsPathPossible (List<GraphNode> nodes, ITraversalProvider traversable) {
+			if (nodes.Count == 0) return true;
+			
+			Path emptyPath = new ConstantPath();
+			// Make sure that the first node is reachable
+			if (!traversable.CanTraverse(emptyPath, nodes[0])) return false;
+
+			// Fast check first
+			if (!IsPathPossible(nodes)) return false;
+
+			// Make sure that the first node can reach all other nodes
+			var reachable = GetReachableNodes(nodes[0], traversable);
 			bool result = true;
 
 			// Make sure that the first node can reach all other nodes
@@ -150,6 +219,59 @@ namespace Pathfinding {
 			return reachable;
 		}
 
+		/// <summary>
+		/// Returns all nodes reachable from the seed node.
+		/// This function performs a DFS (depth-first-search) or flood fill of the graph and returns all nodes which can be reached from
+		/// the seed node. In almost all cases this will be identical to returning all nodes which have the same area as the seed node.
+		/// In the editor areas are displayed as different colors of the nodes.
+		/// The only case where it will not be so is when there is a one way path from some part of the area to the seed node
+		/// but no path from the seed node to that part of the graph.
+		///
+		/// The returned list is not sorted in any particular way.
+		///
+		/// Depending on the number of reachable nodes, this function can take quite some time to calculate
+		/// so don't use it too often or it might affect the framerate of your game.
+		///
+		/// See: Turnbased -> ITraversalProvider (view in online documentation for working links).
+		///
+		/// Returns: A List<Node> containing all nodes reachable from the seed node.
+		/// For better memory management the returned list should be pooled, see Pathfinding.Util.ListPool.
+		/// </summary>
+		/// <param name="seed">The node to start the search from.</param>
+		/// <param name="traversable">Optional ITraversableProvider to have custom logic (Path component is not used)</param>
+		/// <param name="filter">Optional filter for which nodes to search. You can combine this with tagMask = -1 to make the filter determine everything.
+		///      Only walkable nodes are searched regardless of the filter. If the filter function returns false the node will be treated as unwalkable.</param>
+		public static List<GraphNode> GetReachableNodes (GraphNode seed, ITraversalProvider traversable, System.Func<GraphNode, bool> filter = null) {
+			Stack<GraphNode> dfsStack = StackPool<GraphNode>.Claim();
+			List<GraphNode> reachable = ListPool<GraphNode>.Claim();
+
+			/// <summary>TODO: Pool</summary>
+			var map = new HashSet<GraphNode>();
+
+			System.Action<GraphNode> callback;
+			// Check if we can use the fast path
+			callback = (GraphNode node) =>
+			{
+				Path emptyPath = new ConstantPath();
+				if (traversable.CanTraverse(emptyPath, node) && map.Add(node))
+				{
+					if (filter != null && !filter(node)) return;
+
+					reachable.Add(node);
+					dfsStack.Push(node);
+				}
+			};
+
+			callback(seed);
+
+			while (dfsStack.Count > 0) {
+				dfsStack.Pop().GetConnections(callback);
+			}
+
+			StackPool<GraphNode>.Release(dfsStack);
+			return reachable;
+		}
+		
 		static Queue<GraphNode> BFSQueue;
 		static Dictionary<GraphNode, int> BFSMap;
 
