@@ -2129,6 +2129,98 @@ public class AstarPath : VersionedMonoBehaviour {
 	}
 
 	/// <summary>
+	/// Returns the nearest node to a position using ITraversableProvider interface.
+	/// Searches through all graphs for their nearest nodes to the specified position and picks the closest one.
+	/// The ITraversable can be used to specify constraints on which nodes can be chosen such as only picking walkable nodes.
+	/// See: Utilities for turn-based games -> ITraversableProvider
+	/// </summary>
+	public NNInfo GetNearest (Vector3 position, ITraversalProvider iTraversable) {
+		// Cache property lookup
+		var graphs = this.graphs;
+
+		float minDist = float.PositiveInfinity;
+		NNInfoInternal nearestNode = new NNInfoInternal();
+		int nearestGraph = -1;
+
+		if (graphs != null) {
+			for (int i = 0; i < graphs.Length; i++) {
+				NavGraph graph = graphs[i];
+
+				// Check if this graph should be searched
+				if (graph == null) {
+					continue;
+				}
+
+				NNInfoInternal nnInfo;
+				if (fullGetNearestSearch) {
+					// Slower nearest node search
+					// this will try to find a node which is suitable according to the constraint
+					nnInfo = graph.GetNearestForce(position, iTraversable);
+				} else {
+					// Fast nearest node search
+					// just find a node close to the position without using the constraint that much
+					// (unless that comes essentially 'for free')
+					nnInfo = graph.GetNearest(position, iTraversable);
+				}
+
+				GraphNode node = nnInfo.node;
+
+				// No node found in this graph
+				if (node == null) {
+					continue;
+				}
+
+				// Distance to the closest point on the node from the requested position
+				float dist = ((Vector3)nnInfo.clampedPosition-position).magnitude;
+
+				if (prioritizeGraphs && dist < prioritizeGraphsLimit) {
+					// The node is close enough, choose this graph and discard all others
+					minDist = dist;
+					nearestNode = nnInfo;
+					nearestGraph = i;
+					break;
+				} else {
+					// Choose the best node found so far
+					if (dist < minDist) {
+						minDist = dist;
+						nearestNode = nnInfo;
+						nearestGraph = i;
+					}
+				}
+			}
+		}
+
+		// No matches found
+		if (nearestGraph == -1) {
+			return new NNInfo();
+		}
+
+		// Check if a constrained node has already been set
+		if (nearestNode.constrainedNode != null) {
+			nearestNode.node = nearestNode.constrainedNode;
+			nearestNode.clampedPosition = nearestNode.constClampedPosition;
+		}
+
+		Path emptyPath = new ConstantPath();
+
+		if (!fullGetNearestSearch && nearestNode.node != null && !iTraversable.CanTraverse(emptyPath, nearestNode.node)) {
+			// Otherwise, perform a check to force the graphs to check for a suitable node
+			NNInfoInternal nnInfo = graphs[nearestGraph].GetNearestForce(position, iTraversable);
+
+			if (nnInfo.node != null) {
+				nearestNode = nnInfo;
+			}
+		}
+
+		if (!iTraversable.CanTraverse(emptyPath, nearestNode.node)) {
+			return new NNInfo();
+		}
+
+		// Convert to NNInfo which doesn't have all the internal fields
+		return new NNInfo(nearestNode);
+	}
+	
+	/// <summary>
 	/// Returns the node closest to the ray (slow).
 	/// Warning: This function is brute-force and very slow, use with caution
 	/// </summary>

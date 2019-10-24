@@ -248,6 +248,52 @@ namespace Pathfinding {
 
 			return nnInfo;
 		}
+		
+		/// <summary>Returns the nearest node to a position using the specified ITraversable.</summary>
+		/// <param name="position">The position to try to find a close node to</param>
+		/// <param name="iTraversable">Can for example tell the function to try to return a walkable node. If you do not get a good node back, consider calling GetNearestForce.</param>
+		public virtual NNInfoInternal GetNearest (Vector3 position, ITraversalProvider iTraversable) {
+			// This is a default implementation and it is pretty slow
+			// Graphs usually override this to provide faster and more specialised implementations
+
+			float maxDistSqr = AstarPath.active.maxNearestNodeDistanceSqr;
+
+			float minDist = float.PositiveInfinity;
+			GraphNode minNode = null;
+
+			float minConstDist = float.PositiveInfinity;
+			GraphNode minConstNode = null;
+
+			Path emptyPath = new ConstantPath();
+			
+			// Loop through all nodes and find the closest suitable node
+			GetNodes(node => {
+				float dist = (position-(Vector3)node.position).sqrMagnitude;
+
+				if (dist < minDist) {
+					minDist = dist;
+					minNode = node;
+				}
+
+				if (dist < minConstDist && dist < maxDistSqr && (iTraversable == null || iTraversable.CanTraverse(emptyPath, node))) {
+					minConstDist = dist;
+					minConstNode = node;
+				}
+			});
+
+			var nnInfo = new NNInfoInternal(minNode);
+
+			nnInfo.constrainedNode = minConstNode;
+
+			if (minConstNode != null) {
+				nnInfo.constClampedPosition = (Vector3)minConstNode.position;
+			} else if (minNode != null) {
+				nnInfo.constrainedNode = minNode;
+				nnInfo.constClampedPosition = (Vector3)minNode.position;
+			}
+
+			return nnInfo;
+		}
 
 		/// <summary>
 		/// Returns the nearest node to a position using the specified \link Pathfinding.NNConstraint constraint \endlink.
@@ -255,6 +301,14 @@ namespace Pathfinding {
 		/// </summary>
 		public virtual NNInfoInternal GetNearestForce (Vector3 position, NNConstraint constraint) {
 			return GetNearest(position, constraint);
+		}
+		
+		/// <summary>
+		/// Returns the nearest node to a position using the specified ITraversableProvider .
+		/// Returns: an NNInfo. This method will only return an empty NNInfo if there are no nodes which comply with the specified constraint.
+		/// </summary>
+		public virtual NNInfoInternal GetNearestForce (Vector3 position, ITraversalProvider iTraversable) {
+			return GetNearest(position, iTraversable);
 		}
 
 		/// <summary>
