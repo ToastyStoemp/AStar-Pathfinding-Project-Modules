@@ -412,12 +412,10 @@ namespace Pathfinding {
 		public readonly uint[] neighbourCosts = new uint[8];
 
 		/// <summary>Offsets in the X direction for neighbour nodes. Only 1, 0 or -1</summary>
-		[System.NonSerialized]
-		public readonly int[] neighbourXOffsets = new int[8];
+		public static readonly int[] neighbourXOffsets = { 0, 1, 0, -1, 1, 1, -1, -1 };
 
 		/// <summary>Offsets in the Z direction for neighbour nodes. Only 1, 0 or -1</summary>
-		[System.NonSerialized]
-		public readonly int[] neighbourZOffsets = new int[8];
+		public static readonly int[] neighbourZOffsets = { -1, 0, 1, 0, -1, 1, 1, -1 };
 
 		/// <summary>Which neighbours are going to be used when <see cref="neighbours"/>=6</summary>
 		internal static readonly int[] hexagonNeighbourIndices = { 0, 1, 5, 2, 3, 7 };

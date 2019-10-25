@@ -390,11 +390,11 @@ namespace Pathfinding {
 									int nx, nz;
 									if (gg.neighbours == NumNeighbours.Six) {
 										// Hexagon graph
-										nx = x + gg.neighbourXOffsets[GridGraph.hexagonNeighbourIndices[d]];
-										nz = z + gg.neighbourZOffsets[GridGraph.hexagonNeighbourIndices[d]];
+										nx = x + GridGraph.neighbourXOffsets[GridGraph.hexagonNeighbourIndices[d]];
+										nz = z + GridGraph.neighbourZOffsets[GridGraph.hexagonNeighbourIndices[d]];
 									} else {
-										nx = x + gg.neighbourXOffsets[d];
-										nz = z + gg.neighbourZOffsets[d];
+										nx = x + GridGraph.neighbourXOffsets[d];
+										nz = z + GridGraph.neighbourZOffsets[d];
 									}
 
 									// Check if the position is still inside the grid
