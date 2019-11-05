@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
+using Pathfinding;
 
 namespace None {
 
@@ -29,6 +31,8 @@ namespace None {
 
         public bool forcePerpendicularSwapStart;
         public bool forcePerpendicularSwapEnd;
+
+        private bool hasReversed;
 
         public void Start () {
 			//Cache the Main Camera
@@ -93,6 +97,8 @@ namespace None {
 
         public void CalculateFormationPath()
         {
+            hasReversed = false;
+            
             Vector2 startPos = startTransform.position.ToVector2();
             Vector2 startDir = startTransform.forward.ToVector2().normalized * -1f;
 
@@ -137,7 +143,8 @@ namespace None {
             {
                 //Issue With Direct path!
                 //Try Reversing?
-                Calculate3PointTurn();
+                if (!hasReversed)
+                    Calculate3PointTurn(ref path, startDir, startDir, endPos, endDir);
                 return;
             }
 
@@ -235,13 +242,14 @@ namespace None {
 
         public void Calculate3PointTurn(ref List<SteeringPathPoint> path, Vector2 startPos, Vector2 startDir, Vector2 endPos, Vector2 endDir)
         {
-          
             //Turn 180
             CalculateSimpleTurn(ref path, startPos, startDir, out Vector2 exitPos, out Vector2 exitDir);
             CalculateSimpleTurn(ref path, exitPos, exitDir, out Vector2 finalExitPos, out Vector2 finalExitDir, true);
 
             //Continue Path
             CalculateUsing2SteeringCircles(ref path, startPos, startDir, endPos, endDir);
+
+            hasReversed = true;
         }
 
         public void CalculateSimpleTurn(ref List<SteeringPathPoint> path, Vector2 pos, Vector2 dir, out Vector2 exitPos, out Vector2 exitDir, bool isReverse = false, bool turnRight = true)
@@ -269,7 +277,7 @@ namespace None {
             exitPos = circleCenterPos + dir * turnRadius;
             circleExitAngle = exitPos.ConvertToAngle();
 
-`           float startAngle = directionPerp.ConvertToAngle();
+            float startAngle = directionPerp.ConvertToAngle();
             float endAngle = circleExitAngle;
 
             // Generate points on the starting circle
