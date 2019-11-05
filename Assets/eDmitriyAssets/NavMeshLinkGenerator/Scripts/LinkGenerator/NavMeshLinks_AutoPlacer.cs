@@ -251,7 +251,7 @@ namespace eDmitriyAssets.NavmeshLinksGenerator
  
         private void CalcEdges()
         {
-            List<Vector3> edgepoints = GraphUtilities.GetContours(AstarPath.active.data.recastGraph);
+            List<Vector3> edgepoints = GraphUtilities.GetContours(AstarPath.active.data.graphs[0]);
  
             for (int i = 0; i < edgepoints.Count - 1; i += 2)
             {
