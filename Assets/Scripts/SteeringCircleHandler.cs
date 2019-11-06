@@ -5,6 +5,12 @@ namespace None {
 	
     public static class VectorTools
     {
+        public static float GetDirectionDot(this Vector2 originalVector, Vector2 directionVector)
+        {
+            Vector2 result1 = new Vector2(-1 * originalVector.y, originalVector.x);
+            return Vector2.Dot(result1, directionVector);
+        }
+        
         public static Vector2 Perpendicular(this Vector2 originalVector, Vector2 directionVector, bool forceSwap = false)
         {
             Vector2 result1 = new Vector2(-1 * originalVector.y, originalVector.x);

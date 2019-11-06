@@ -159,7 +159,7 @@ namespace None {
                 }
                 else
                 {
-                    Calculate3PointTurn(ref path, startPos, startDir, endPos, endDir, directionVec);
+                    Calculate3PointTurn(ref path, startPos, startDir, endPos, endDir);
                 }
 
                 return;
@@ -257,12 +257,15 @@ namespace None {
                 GeneratePath_CounterClockwise_OLD(startAngle, endAngle, endCircleCenterPos, ref path);
         }
 
-        public void Calculate3PointTurn(ref List<SteeringPathPoint> path, Vector2 startPos, Vector2 startDir, Vector2 endPos, Vector2 endDir, float directionDot)
+        public void Calculate3PointTurn(ref List<SteeringPathPoint> path, Vector2 startPos, Vector2 startDir, Vector2 endPos, Vector2 endDir)
         {
             hasReversed = true;
             
             //Turn 180
-            CalculateSimpleTurn(ref path, startPos, startDir, out Vector2 exitPos, out Vector2 exitDir, directionDot, false);
+            Vector2 directionVec = (endPos - startPos).normalized;
+            float directionDot = startPos.GetDirectionDot(directionVec * -1);
+            
+            CalculateSimpleTurn(ref path, startPos, startDir, out Vector2 exitPos, out Vector2 exitDir, directionDot);
             CalculateSimpleTurn(ref path, exitPos, exitDir, out Vector2 finalExitPos, out Vector2 finalExitDir, directionDot, true);
 
             //Continue Path
@@ -400,7 +403,7 @@ namespace None {
             float endAngle = (exitPos - circleCenterPos).ConvertToAngle();
 
             // Generate points on the starting circle
-            if (directionDot >= -0.1) // clockwise
+            if (directionDot <= -0.1) // clockwise
                 GeneratePath_Clockwise(startAngle, endAngle, circleCenterPos, isReverse, ref path);
             else // Counter-clockwise
                 GeneratePath_CounterClockwise(startAngle, endAngle, circleCenterPos, isReverse, ref path);
