@@ -48,7 +48,7 @@ namespace None {
                 }
                 else if (Event.current.type == EventType.MouseDrag)
                 {
-                    //UpdateTargetDirection();
+                    UpdateTargetDirection();
                     hasSetDirection = true;
                 }
                 else if (Event.current.type == EventType.MouseUp)
@@ -103,7 +103,7 @@ namespace None {
 
             finalPath.Clear();
 
-            CalculateUsing2SteeringCircles(ref finalPath, startPos, startDir, endPos, endDir);
+            CalculateUsing2SteeringCircles(ref finalPath, startPos, startDir, endPos, -endDir);
         }
 
         public void CalculateUsing2SteeringCircles(ref List<SteeringPathPoint> path, Vector2 startPos, Vector2 startDir, Vector2 endPos, Vector2 endDir)
@@ -248,7 +248,7 @@ namespace None {
             CalculateSimpleTurn(ref path, exitPos, exitDir, out Vector2 finalExitPos, out Vector2 finalExitDir, true, preferRight);
 
             //Continue Path
-            CalculateUsing2SteeringCircles(ref path, finalExitPos, finalExitDir, endPos, endDir * -1);
+            CalculateUsing2SteeringCircles(ref path, finalExitPos, finalExitDir, endPos, endDir);
         }
 
         public void CalculateSimpleTurn(ref List<SteeringPathPoint> path, Vector2 pos, Vector2 dir, out Vector2 exitPos, out Vector2 exitDir, bool isReverse = false, bool turnRight = true)
