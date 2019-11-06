@@ -30,6 +30,9 @@ namespace None {
 
         public static float ConvertToAngle(this Vector2 vector)
         {
+            if (vector == Vector2.right)
+                return 0;
+            
             var angle = Mathf.Acos(vector.x / vector.magnitude);
 
             if (vector.y <= Mathf.Epsilon)

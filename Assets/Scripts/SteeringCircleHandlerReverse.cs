@@ -26,11 +26,7 @@ namespace None {
 
         Camera cam;
 
-        public bool swapStartPerpendicular;
-        public bool swapEndPerpendicular;
-
-        public bool forcePerpendicularSwapStart;
-        public bool forcePerpendicularSwapEnd;
+        public bool preferRight = true;
 
         private bool hasReversed;
 
@@ -41,7 +37,7 @@ namespace None {
 
         private void Update()
         {
-            CalculateFormationPath();
+            //CalculateFormationPath();
         }
 
         public void OnGUI () {
@@ -52,7 +48,7 @@ namespace None {
                 }
                 else if (Event.current.type == EventType.MouseDrag)
                 {
-                    UpdateTargetDirection();
+                    //UpdateTargetDirection();
                     hasSetDirection = true;
                 }
                 else if (Event.current.type == EventType.MouseUp)
@@ -100,10 +96,10 @@ namespace None {
             hasReversed = false;
             
             Vector2 startPos = startTransform.position.ToVector2();
-            Vector2 startDir = startTransform.forward.ToVector2().normalized * -1f;
+            Vector2 startDir = startTransform.forward.ToVector2().normalized;
 
             Vector2 endPos = targetTransform.position.ToVector2();
-            Vector2 endDir = targetTransform.forward.ToVector2().normalized * -1f;
+            Vector2 endDir = targetTransform.forward.ToVector2().normalized;
 
             finalPath.Clear();
 
@@ -112,6 +108,10 @@ namespace None {
 
         public void CalculateUsing2SteeringCircles(ref List<SteeringPathPoint> path, Vector2 startPos, Vector2 startDir, Vector2 endPos, Vector2 endDir)
         {
+            startDir = startDir.normalized;
+            endDir = endDir.normalized;
+            
+            
             Vector2 startCircleCenterPos;
             Vector2 endCircleCenterPos;
 
@@ -128,23 +128,22 @@ namespace None {
 
             // 1) Calculate the starting steering circle
             directionVec = (endPos - startPos).normalized;
-            startPerpendicular = startDir.Perpendicular(directionVec, forcePerpendicularSwapStart);
+            startPerpendicular = startDir.Perpendicular(directionVec);
             startCircleCenterPos = startPos + startPerpendicular * turnRadius;
 
             // 2) Calculate the ending steering circle
-            endPerpendicular = endDir.Perpendicular(directionVec * -1f, forcePerpendicularSwapEnd);
+            endPerpendicular = endDir.Perpendicular(directionVec * -1f);
             endCircleCenterPos = endPos + endPerpendicular * turnRadius;
 
             //swapPerpendicular = !swapPerpendicular;
 
             centerDir = endCircleCenterPos - startCircleCenterPos;
 
-            if (centerDir.magnitude < 2 * turnRadius)
+            if (centerDir.magnitude < 2 * turnRadius && !hasReversed)
             {
                 //Issue With Direct path!
                 //Try Reversing?
-                if (!hasReversed)
-                    Calculate3PointTurn(ref path, startDir, startDir, endPos, endDir);
+                Calculate3PointTurn(ref path, startPos, startDir, endPos, endDir);
                 return;
             }
 
@@ -223,9 +222,9 @@ namespace None {
 
             // Generate points on the starting circle
             if (sideStart == 0) // clockwise
-                GeneratePath_Clockwise(startAngle, endAngle, startCircleCenterPos, false, ref path);
+                GeneratePath_Clockwise_OLD(startAngle, endAngle, startCircleCenterPos, ref path);
             else // Counter-clockwise
-                GeneratePath_CounterClockwise(startAngle, endAngle, startCircleCenterPos, false, ref path);
+                GeneratePath_CounterClockwise_OLD(startAngle, endAngle, startCircleCenterPos, ref path);
 
             //End Circle
             Vector2 endVec = endPos - endCircleCenterPos;
@@ -235,50 +234,39 @@ namespace None {
 
             // Generate points on the starting circle
             if (sideEnd == 0) // clockwise
-                GeneratePath_Clockwise(startAngle, endAngle, endCircleCenterPos, false, ref path);
+                GeneratePath_Clockwise_OLD(startAngle, endAngle, endCircleCenterPos, ref path);
             else // Counter-clockwise
-                GeneratePath_CounterClockwise(startAngle, endAngle, endCircleCenterPos, false, ref path);
+                GeneratePath_CounterClockwise_OLD(startAngle, endAngle, endCircleCenterPos, ref path);
         }
 
         public void Calculate3PointTurn(ref List<SteeringPathPoint> path, Vector2 startPos, Vector2 startDir, Vector2 endPos, Vector2 endDir)
         {
+            hasReversed = true;
+            
             //Turn 180
-            CalculateSimpleTurn(ref path, startPos, startDir, out Vector2 exitPos, out Vector2 exitDir);
-            CalculateSimpleTurn(ref path, exitPos, exitDir, out Vector2 finalExitPos, out Vector2 finalExitDir, true);
+            CalculateSimpleTurn(ref path, startPos, startDir, out Vector2 exitPos, out Vector2 exitDir, false, preferRight);
+            CalculateSimpleTurn(ref path, exitPos, exitDir, out Vector2 finalExitPos, out Vector2 finalExitDir, true, preferRight);
 
             //Continue Path
-            CalculateUsing2SteeringCircles(ref path, startPos, startDir, endPos, endDir);
-
-            hasReversed = true;
+            CalculateUsing2SteeringCircles(ref path, finalExitPos, finalExitDir, endPos, endDir * -1);
         }
 
         public void CalculateSimpleTurn(ref List<SteeringPathPoint> path, Vector2 pos, Vector2 dir, out Vector2 exitPos, out Vector2 exitDir, bool isReverse = false, bool turnRight = true)
         {
-
-            Vector2 circleCenterPos;
-            float circleExitAngle;
-
-            Vector2 directionPerp;
-
             if (isReverse)
             {
                 dir *= -1;
-                turnRight = !turnRight;
             }
 
             //Start Circle
-            if (turnRight)
-                directionPerp = dir.RightPerp();
-            else
-                directionPerp = dir.LeftPerp();
-
-            circleCenterPos = pos + directionPerp * turnRadius;
+            Vector2 dirPerpendicular = turnRight ? dir.RightPerp() : dir.LeftPerp();
+            Vector2 circleCenterPos = pos + dirPerpendicular * turnRadius;
 
             exitPos = circleCenterPos + dir * turnRadius;
-            circleExitAngle = exitPos.ConvertToAngle();
 
-            float startAngle = directionPerp.ConvertToAngle();
-            float endAngle = circleExitAngle;
+            Vector2 startVec = pos - circleCenterPos;
+            float startAngle = startVec.ConvertToAngle(); //startVec.ConvertToAngle();
+            float endAngle = (exitPos - circleCenterPos).ConvertToAngle();
 
             // Generate points on the starting circle
             if (turnRight) // clockwise
@@ -286,10 +274,47 @@ namespace None {
             else // Counter-clockwise
                 GeneratePath_CounterClockwise(startAngle, endAngle, circleCenterPos, isReverse, ref path);
 
-            exitDir = directionPerp * (isReverse ? -1 : 1);
+            exitDir = dirPerpendicular;
         }
 
         public void GeneratePath_Clockwise (float startAngle, float endAngle, Vector3 center, bool isReverse, ref List<SteeringPathPoint> path)
+        {
+            if (Mathf.Abs(startAngle - endAngle) > angleStep && startAngle < endAngle)
+                endAngle -= 2 * Mathf.PI;
+            
+            float curAngle = startAngle;
+            while (curAngle > endAngle)
+            {
+                var p = new Vector2
+                {
+                    x = center.x + turnRadius * Mathf.Cos(curAngle),
+                    y = center.y + turnRadius * Mathf.Sin(curAngle)
+                };
+                path.Add(new SteeringPathPoint()
+                {
+                    position = p,
+                    isReverse = isReverse
+                });
+
+                curAngle -= angleStep;
+            }
+
+            if (curAngle != endAngle)
+            {
+                var p = new Vector2
+                {
+                    x = center.x + turnRadius * Mathf.Cos(endAngle),
+                    y = center.y + turnRadius * Mathf.Sin(endAngle)
+                };
+                path.Add(new SteeringPathPoint()
+                {
+                    position = p,
+                    isReverse = isReverse
+                });
+            }
+        }
+
+        public void GeneratePath_CounterClockwise (float startAngle, float endAngle, Vector3 center, bool isReverse, ref List<SteeringPathPoint> path)
         {
             if (Mathf.Abs(startAngle - endAngle) > angleStep && startAngle > endAngle)
                 endAngle += 2 * Mathf.PI;
@@ -326,7 +351,44 @@ namespace None {
             }
         }
 
-        public void GeneratePath_CounterClockwise (float startAngle, float endAngle, Vector3 center, bool isReverse, ref List<SteeringPathPoint> path)
+        public void GeneratePath_Clockwise_OLD (float startAngle, float endAngle, Vector3 center, ref List<SteeringPathPoint> path)
+        {
+            if (Mathf.Abs(startAngle - endAngle) > angleStep && startAngle > endAngle)
+                endAngle += 2 * Mathf.PI;
+
+            float curAngle = startAngle;
+            while (curAngle < endAngle)
+            {
+                var p = new Vector2
+                {
+                    x = center.x + turnRadius * Mathf.Cos(curAngle),
+                    y = center.y + turnRadius * Mathf.Sin(curAngle)
+                };
+                path.Add(new SteeringPathPoint()
+                {
+                    position = p,
+                    isReverse = false
+                });
+
+                curAngle += angleStep;
+            }
+
+            if (curAngle != endAngle)
+            {
+                var p = new Vector2
+                {
+                    x = center.x + turnRadius * Mathf.Cos(endAngle),
+                    y = center.y + turnRadius * Mathf.Sin(endAngle)
+                };
+                path.Add(new SteeringPathPoint()
+                {
+                    position = p,
+                    isReverse = false
+                });
+            }
+        }
+
+        public void GeneratePath_CounterClockwise_OLD (float startAngle, float endAngle, Vector3 center, ref List<SteeringPathPoint> path)
         {
             if (Mathf.Abs(startAngle - endAngle) > angleStep && startAngle < endAngle)
                 startAngle += 2 * Mathf.PI;
@@ -342,7 +404,7 @@ namespace None {
                 path.Add(new SteeringPathPoint()
                 {
                     position = p,
-                    isReverse = isReverse
+                    isReverse = false
                 });
 
                 curAngle -= angleStep;
@@ -358,11 +420,11 @@ namespace None {
                 path.Add(new SteeringPathPoint()
                 {
                     position = p,
-                    isReverse = isReverse
+                    isReverse = false
                 });
             }
         }
-
+        
         private void OnDrawGizmos()
         {
             Gizmos.color = Color.green;
