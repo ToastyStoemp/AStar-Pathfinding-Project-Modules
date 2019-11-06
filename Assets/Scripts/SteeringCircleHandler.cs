@@ -7,12 +7,18 @@ namespace None {
     {
         public static Vector2 Perpendicular(this Vector2 originalVector, Vector2 directionVector, bool forceSwap = false)
         {
-            var result1 = new Vector2(-1 * originalVector.y, originalVector.x);
-            var result2 = new Vector2(originalVector.y, -1 * originalVector.x);
-
+            Vector2 result1 = new Vector2(-1 * originalVector.y, originalVector.x);
             float dotResult = Vector2.Dot(result1, directionVector);
 
-            if (dotResult >= -0.1)
+            return originalVector.Perpendicular(dotResult);
+        }
+        
+        public static Vector2 Perpendicular(this Vector2 originalVector, float directionDot, bool forceSwap = false)
+        {
+            Vector2 result1 = new Vector2(-1 * originalVector.y, originalVector.x);
+            Vector2 result2 = new Vector2(originalVector.y, -1 * originalVector.x);
+
+            if (directionDot >= -0.1)
                 return forceSwap ? result2 : result1;
             else
                 return forceSwap ? result1 : result2;
