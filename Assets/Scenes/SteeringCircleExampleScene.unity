@@ -499,7 +499,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 108}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8e6aabdbebcc2e4b857bccdce2eba74, type: 3}
+  m_Script: {fileID: 11500000, guid: 6272ee3463b0f434da7992980d45dbe3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   mask:
@@ -509,7 +509,10 @@ MonoBehaviour:
   startTransform: {fileID: 680002821}
   turnRadius: 3
   angleStep: 0.5
-  finalPath: []
+  swapStartPerpendicular: 0
+  swapEndPerpendicular: 0
+  forcePerpendicularSwapStart: 0
+  forcePerpendicularSwapEnd: 0
 --- !u!4 &204
 Transform:
   m_ObjectHideFlags: 0
