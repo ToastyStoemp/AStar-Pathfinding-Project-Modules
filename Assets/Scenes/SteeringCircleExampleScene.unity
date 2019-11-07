@@ -484,7 +484,7 @@ GameObject:
   - component: {fileID: 425}
   - component: {fileID: 328}
   m_Layer: 8
-  m_Name: Target
+  m_Name: StartTransform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -509,10 +509,8 @@ MonoBehaviour:
   startTransform: {fileID: 680002821}
   turnRadius: 3
   angleStep: 0.5
-  swapStartPerpendicular: 0
-  swapEndPerpendicular: 0
-  forcePerpendicularSwapStart: 0
-  forcePerpendicularSwapEnd: 0
+  preferRight: 1
+  useComplexReverse: 0
 --- !u!4 &204
 Transform:
   m_ObjectHideFlags: 0
@@ -1263,7 +1261,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 86ebf3c4b42174d2a9d3c1dfd2476f32, type: 2}
+  - {fileID: 2100000, guid: 57eb4c059e0b3467cac0a46a3b859a2d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1725,7 +1723,7 @@ Transform:
   m_Children:
   - {fileID: 223}
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &680002818
 GameObject:
@@ -1739,7 +1737,7 @@ GameObject:
   - component: {fileID: 680002820}
   - component: {fileID: 680002819}
   m_Layer: 8
-  m_Name: Target (1)
+  m_Name: EndTransform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1762,7 +1760,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 40e9cd3d557264fc49df68fe87fe6bdd, type: 2}
+  - {fileID: 2100000, guid: 8e2768ddb13a540bd8d88bcbe4217c52, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1803,7 +1801,7 @@ Transform:
   m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1280746451
 PrefabInstance:
