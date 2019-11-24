@@ -1,7 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
-using Pathfinding;
 
 namespace None {
 
@@ -20,13 +18,13 @@ namespace None {
         private bool hasSetDirection;
 
         public float turnRadius = 3;
+        private float previousTurnRadius;
         public float angleStep = 0.5f;
+        private float previousAngleStep;
 
         public List<SteeringPathPoint> finalPath = new List<SteeringPathPoint>();
 
-        Camera cam;
-
-        public bool preferRight = true;
+        private Camera cam;
 
         private bool hasReversed;
 
@@ -48,25 +46,39 @@ namespace None {
                 
                 CalculateFormationPath();
             }
+
+            if (turnRadius != previousTurnRadius)
+            {
+                previousTurnRadius = turnRadius;
+                CalculateFormationPath();
+            }
+            
+            if (angleStep != previousAngleStep)
+            {
+                previousAngleStep = angleStep;
+                if (angleStep > 0)
+                    CalculateFormationPath();
+            }
         }
 
         public void OnGUI () {
-			if (cam != null) {
-                if (Event.current.type == EventType.MouseDown)
-                { 
-                    UpdateTargetPosition();
-                }
-                else if (Event.current.type == EventType.MouseDrag)
+			if (cam != null)
+            {
+                switch (Event.current.type)
                 {
-                    UpdateTargetDirection();
-                    hasSetDirection = true;
+                    case EventType.MouseDown:
+                        UpdateTargetPosition();
+                        break;
+                    case EventType.MouseDrag:
+                        UpdateTargetDirection();
+                        hasSetDirection = true;
+                        break;
+                    case EventType.MouseUp:
+                        UpdateTargetDirection();
+                        hasSetDirection = false;
+                        break;
                 }
-                else if (Event.current.type == EventType.MouseUp)
-                {
-                    UpdateTargetDirection();
-                    hasSetDirection = false;
-                }
-			}
+            }
 		}
 
         public void UpdateTargetPosition()
@@ -120,10 +132,7 @@ namespace None {
         {
             startDir = startDir.normalized;
             endDir = endDir.normalized;
-            
-            
-            Vector2 startCircleCenterPos;
-            Vector2 endCircleCenterPos;
+
 
             Vector2 startCircleExitPos;
             Vector2 endCircleEnterPos;
@@ -131,23 +140,18 @@ namespace None {
             float startCircleExitAngle;
             float endCircleEnterAngle;
 
-            Vector2 startPerpendicular, endPerpendicular;
-            Vector2 directionVec;
-
-            Vector2 centerDir;
-
             // 1) Calculate the starting steering circle
-            directionVec = (endPos - startPos).normalized;
-            startPerpendicular = startDir.Perpendicular(directionVec);
-            startCircleCenterPos = startPos + startPerpendicular * turnRadius;
+            Vector2 directionVec = (endPos - startPos).normalized;
+            Vector2 startPerpendicular = startDir.Perpendicular(directionVec);
+            Vector2 startCircleCenterPos = startPos + startPerpendicular * turnRadius;
 
             // 2) Calculate the ending steering circle
-            endPerpendicular = endDir.Perpendicular(directionVec * -1f);
-            endCircleCenterPos = endPos + endPerpendicular * turnRadius;
+            Vector2 endPerpendicular = endDir.Perpendicular(directionVec * -1f);
+            Vector2 endCircleCenterPos = endPos + endPerpendicular * turnRadius;
 
             //swapPerpendicular = !swapPerpendicular;
 
-            centerDir = endCircleCenterPos - startCircleCenterPos;
+            Vector2 centerDir = endCircleCenterPos - startCircleCenterPos;
 
             if (centerDir.magnitude < 2 * turnRadius && !hasReversed)
             {
@@ -165,18 +169,8 @@ namespace None {
                 return;
             }
 
-            int sideStart;
-            int sideEnd;
-
-            if (startPerpendicular == startDir.RightPerp())
-                sideStart = 0;
-            else
-                sideStart = 1;
-
-            if (endPerpendicular == endDir.RightPerp())
-                sideEnd = 0;
-            else
-                sideEnd = 1;
+            int sideStart = startPerpendicular == startDir.RightPerp() ? 0 : 1;
+            int sideEnd = endPerpendicular == endDir.RightPerp() ? 0 : 1;
 
             // 3) Calculate the starting circle exit point    
             if (sideStart != sideEnd)
@@ -266,10 +260,12 @@ namespace None {
             float directionDot = startPos.GetDirectionDot(directionVec * -1);
             
             CalculateSimpleTurn(ref path, startPos, startDir, out Vector2 exitPos, out Vector2 exitDir, directionDot);
-            CalculateSimpleTurn(ref path, exitPos, exitDir, out Vector2 finalExitPos, out Vector2 finalExitDir, directionDot, true);
+            CalculateComplexReversePath(ref path, exitPos, exitDir, endPos, endDir);
+            
+            //CalculateSimpleTurn(ref path, exitPos, exitDir, out Vector2 finalExitPos, out Vector2 finalExitDir, directionDot, true);
 
             //Continue Path
-            CalculateUsing2SteeringCircles(ref path, finalExitPos, finalExitDir, endPos, endDir);
+            //CalculateUsing2SteeringCircles(ref path, finalExitPos, finalExitDir, endPos, endDir);
         }
 
         public void CalculateComplexReversePath(ref List<SteeringPathPoint> path, Vector2 startPos, Vector2 startDir, Vector2 endPos, Vector2 endDir)
@@ -293,18 +289,8 @@ namespace None {
 
             Vector2 centerDir = endCircleCenterPos - startCircleCenterPos;
 
-            int sideStart;
-            int sideEnd;
-
-            if (startPerpendicular == startDirInv.RightPerp())
-                sideStart = 0;
-            else
-                sideStart = 1;
-
-            if (endPerpendicular == endDir.RightPerp())
-                sideEnd = 0;
-            else
-                sideEnd = 1;
+            int sideStart = startPerpendicular == startDirInv.RightPerp() ? 0 : 1;
+            int sideEnd = endPerpendicular == endDir.RightPerp() ? 0 : 1;
 
             // 3) Calculate the starting circle exit point    
             if (sideStart != sideEnd)
@@ -419,7 +405,7 @@ namespace None {
             float curAngle = startAngle;
             while (curAngle > endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(curAngle),
                     y = center.y + turnRadius * Mathf.Sin(curAngle)
@@ -435,7 +421,7 @@ namespace None {
 
             if (curAngle != endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(endAngle),
                     y = center.y + turnRadius * Mathf.Sin(endAngle)
@@ -456,7 +442,7 @@ namespace None {
             float curAngle = startAngle;
             while (curAngle < endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(curAngle),
                     y = center.y + turnRadius * Mathf.Sin(curAngle)
@@ -472,7 +458,7 @@ namespace None {
 
             if (curAngle != endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(endAngle),
                     y = center.y + turnRadius * Mathf.Sin(endAngle)
@@ -493,7 +479,7 @@ namespace None {
             float curAngle = startAngle;
             while (curAngle < endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(curAngle),
                     y = center.y + turnRadius * Mathf.Sin(curAngle)
@@ -509,7 +495,7 @@ namespace None {
 
             if (curAngle != endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(endAngle),
                     y = center.y + turnRadius * Mathf.Sin(endAngle)
@@ -530,7 +516,7 @@ namespace None {
             float curAngle = startAngle;
             while (curAngle > endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(curAngle),
                     y = center.y + turnRadius * Mathf.Sin(curAngle)
@@ -546,7 +532,7 @@ namespace None {
 
             if (curAngle != endAngle)
             {
-                var p = new Vector2
+                Vector2 p = new Vector2
                 {
                     x = center.x + turnRadius * Mathf.Cos(endAngle),
                     y = center.y + turnRadius * Mathf.Sin(endAngle)
@@ -562,9 +548,11 @@ namespace None {
         private void OnDrawGizmos()
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawLine(startTransform.position, startTransform.position + startTransform.forward);
+            Vector3 startTransformPosition = startTransform.position;
+            Gizmos.DrawLine(startTransformPosition, startTransformPosition + startTransform.forward);
             Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(targetTransform.position, targetTransform.position + targetTransform.forward);
+            Vector3 targetTransformPosition = targetTransform.position;
+            Gizmos.DrawLine(targetTransformPosition, targetTransformPosition + targetTransform.forward);
             Gizmos.color = Color.white;
                        
             if (finalPath != null)
@@ -575,14 +563,7 @@ namespace None {
                 {
                     Vector3 currentPoint = finalPath[i].position.ToVector3();
 
-                    if (finalPath[i].isReverse)
-                    {
-                        Gizmos.color = Color.red;
-                    }
-                    else
-                    {
-                        Gizmos.color = Color.white;
-                    }
+                    Gizmos.color = finalPath[i].isReverse ? Color.red : Color.white;
 
                     Gizmos.DrawSphere(currentPoint, 0.25f);
 
