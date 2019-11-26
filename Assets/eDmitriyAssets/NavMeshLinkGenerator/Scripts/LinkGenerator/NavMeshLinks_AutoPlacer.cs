@@ -7,9 +7,9 @@
 ///
 /// Notes:
 /// Currently only works with NodeLink2, though easy to change by replacing all instanced of NodeLink2 with the desired one.
-/// For Grid Graphs you might have to enable invertFacingNormal
+/// For Grid Graphs you might have to enable invertFacingNormal also might be required when using multiple graph types together.
 /// 
-/// Last edited on 24th November 2019 
+/// Last edited on 26th November 2019 
 /// ----------------------------------------------------------------------------------
 
 
