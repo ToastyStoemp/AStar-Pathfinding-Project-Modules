@@ -51,14 +51,14 @@ namespace NavmeshLinksGenerator
         public float wallCheckYOffset = 0.5f;
 
         [Header("EdgeNormal")] public bool invertFacingNormal = false;
-        public bool dontAllignYAxis = false;
+        public bool dontAllignYAxis = true;
 
 
         //private List< Vector3 > spawnedLinksPositionsList = new List< Vector3 >();
         private Mesh currMesh;
         private List<Edge> edges = new List<Edge>();
 
-        public float agentRadius = 1;
+        public float agentRadius = 0.5f;
 
         private Vector3 ReUsableV3;
         private Vector3 offSetPosY;
@@ -79,7 +79,12 @@ namespace NavmeshLinksGenerator
             edges.Clear();
             //spawnedLinksPositionsList.Clear();
 
-            CalcEdges();
+            foreach (NavGraph graph in AstarData.active.graphs)
+            {
+                if (graph != null && !(graph is PointGraph))
+                    CalcEdges(graph);
+            }
+
             PlaceTiles();
 
 
@@ -164,47 +169,55 @@ namespace NavmeshLinksGenerator
         {
             bool result = false;
 
-            Vector3 startPos = pos + normal * Vector3.forward * agentRadius * 2;
+            Vector3 startPosHorizontal = pos + Vector3.up * wallCheckYOffset - normal * Vector3.forward * agentRadius;
+            Vector3 startPos = pos + normal * Vector3.forward * agentRadius * 2 + Vector3.up * wallCheckYOffset;
             Vector3 endPos = startPos - Vector3.up * maxJumpDownHeight * 1.1f;
 
-            //Debug.DrawLine ( startPos, endPos, Color.white, 2 );
+            //Debug Wall Hit
+            //Debug.DrawLine ( startPosHorizontal, startPos, Physics.Linecast(startPosHorizontal, startPos, out _, raycastLayerMask.value, QueryTriggerInteraction.Ignore) ? Color.red : Color.green, 2 );
 
             RaycastHit raycastHit = new RaycastHit();
-            if (Physics.Linecast(startPos, endPos, out raycastHit, raycastLayerMask.value, QueryTriggerInteraction.Ignore))
+            if (!Physics.Linecast(startPosHorizontal, startPos, out _, raycastLayerMask.value, QueryTriggerInteraction.Ignore))
             {
-                NNInfo nodeInfo = AstarPath.active.GetNearest(raycastHit.point, NNConstraint.Default);
-                Vector3 closestPos = nodeInfo.position;
-
-                if (nodeInfo.node != null)
+                //Debug Vertical Hit
+                //Debug.DrawLine ( startPos, endPos, Physics.Linecast(startPos, endPos, out raycastHit, raycastLayerMask.value, QueryTriggerInteraction.Ignore) ? Color.red : Color.green, 2 );
+                
+                if (Physics.Linecast(startPos, endPos, out raycastHit, raycastLayerMask.value, QueryTriggerInteraction.Ignore))
                 {
-                    //Debug.DrawLine( pos, closestPos, Color.black, 15 );
+                    NNInfo nodeInfo = AstarPath.active.GetNearest(raycastHit.point, NNConstraint.Default);
+                    Vector3 closestPos = nodeInfo.position;
 
-                    if (Vector3.Distance(pos, closestPos) > 1.1f)
+                    if (nodeInfo.node != null)
                     {
-                        //added these 2 line to check to make sure there aren't flat horizontal links going through walls
-                        Vector3 calcV3 = (pos - normal * Vector3.forward * 0.02f);
-                        if ((calcV3.y - closestPos.y) > 1f)
+                        //Debug.DrawLine( pos, closestPos, Color.black, 15 );
+
+                        if (Vector3.Distance(pos, closestPos) > 1.1f)
                         {
-
-                            //SPAWN NAVMESH LINK
-                            Transform typeOfLinkToSpawn = linkPrefab;
-
-                            if (calcV3.y - closestPos.y > maxJumpUpHeight)
+                            //added these 2 line to check to make sure there aren't flat horizontal links going through walls
+                            Vector3 calcV3 = (pos - normal * Vector3.forward * 0.02f);
+                            if ((calcV3.y - closestPos.y) > 1f)
                             {
-                                typeOfLinkToSpawn = oneWayLinkPrefab;
+
+                                //SPAWN NAVMESH LINK
+                                Transform typeOfLinkToSpawn = linkPrefab;
+
+                                if (calcV3.y - closestPos.y > maxJumpUpHeight)
+                                {
+                                    typeOfLinkToSpawn = oneWayLinkPrefab;
+                                }
+
+                                Transform spawnedTransf = Instantiate(typeOfLinkToSpawn, calcV3, normal);
+
+                                NodeLink2 nodeLink = spawnedTransf.GetComponent<NodeLink2>();
+                                GameObject endPoint = new GameObject("end");
+                                endPoint.transform.position = closestPos;
+                                endPoint.transform.SetParent(spawnedTransf, true);
+                                nodeLink.end = endPoint.transform;
+
+                                spawnedTransf.SetParent(transform);
+
+                                nodeLinks.Add(nodeLink);
                             }
-
-                            Transform spawnedTransf = Instantiate(typeOfLinkToSpawn, calcV3, normal);
-
-                            NodeLink2 nodeLink = spawnedTransf.GetComponent<NodeLink2>();
-                            GameObject endPoint = new GameObject("end");
-                            endPoint.transform.position = closestPos;
-                            endPoint.transform.SetParent(spawnedTransf, true);
-                            nodeLink.end = endPoint.transform;
-
-                            spawnedTransf.SetParent(transform);
-                            
-                            nodeLinks.Add(nodeLink);
                         }
                     }
                 }
@@ -235,7 +248,7 @@ namespace NavmeshLinksGenerator
             // ray cast to check for walls
             if (!Physics.Raycast(offSetPosY, ReUsableV3, (maxJumpDist / 2), raycastLayerMask.value))
             {
-                //Debug.DrawRay(pos, ReUsableV3, Color.yellow, 15);
+                //Debug.DrawRay(offSetPosY, ReUsableV3, Color.yellow, 15);
                 Vector3 ReverseRayCastSpot = (offSetPosY + (ReUsableV3));
                 //now raycast back the other way to make sure we're not raycasting through the inside of a mesh the first time.
                 if (!Physics.Raycast(ReverseRayCastSpot, -ReUsableV3, (maxJumpDist + 1), raycastLayerMask.value))
@@ -299,9 +312,9 @@ namespace NavmeshLinksGenerator
 
         float triggerAngle = 0.999f;
 
-        private void CalcEdges()
+        private void CalcEdges(NavGraph graph)
         {
-            List<Vector3> edgepoints = GraphUtilities.GetContours(AstarPath.active.data.graphs[0]);
+            List<Vector3> edgepoints = GraphUtilities.GetContours(graph);
 
             for (int i = 0; i < edgepoints.Count - 1; i += 2)
             {
@@ -348,9 +361,11 @@ namespace NavmeshLinksGenerator
 
                     edge.facingNormalCalculated = true;
                 }
-
-                if (invertFacingNormal) edge.facingNormal = Quaternion.Euler(Vector3.up * 180) * edge.facingNormal;
-
+                
+                if (invertFacingNormal | graph is GridGraph)
+                {
+                    edge.facingNormal = Quaternion.Euler(Vector3.up * 180) * edge.facingNormal;
+                }
             }
         }
 
@@ -375,7 +390,7 @@ namespace NavmeshLinksGenerator
 
             edges.Add(newEdge);
         }
-
+        
         #endregion
     }
 
@@ -402,7 +417,7 @@ namespace NavmeshLinksGenerator
         }
     }
 
-
+    
 
 
 
