@@ -218,8 +218,8 @@ namespace Pathfinding {
 			endNode.AddConnection(connectedNode2, (uint)Mathf.RoundToInt(((Int3)(clamped2 - EndTransform.position)).costMagnitude*costFactor));
 		}
 
-		private readonly static Color GizmosColor = new Color(206.0f/255.0f, 136.0f/255.0f, 48.0f/255.0f, 0.5f);
-		private readonly static Color GizmosColorSelected = new Color(235.0f/255.0f, 123.0f/255.0f, 32.0f/255.0f, 1.0f);
+		public Color GizmosColor = Color.cyan;
+		public Color GizmosColorOneWay = new Color(206.0f/255.0f, 136.0f/255.0f, 48.0f/255.0f, 0.5f);
 
 		public virtual void OnDrawGizmosSelected () {
 			OnDrawGizmos(true);
@@ -230,7 +230,7 @@ namespace Pathfinding {
 		}
 
 		public void OnDrawGizmos (bool selected) {
-			Color color = selected ? GizmosColorSelected : GizmosColor;
+			Color color = oneWay ? GizmosColorOneWay : GizmosColor;
 
 			if (StartTransform != null) {
 				Draw.Gizmos.CircleXZ(StartTransform.position, 0.4f, color);
