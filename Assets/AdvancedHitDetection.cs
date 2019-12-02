@@ -6,85 +6,76 @@ namespace Exiin
     public class AdvancedHitDetection : MonoBehaviour
     {
         public BoxCollider _collider;
-        public Transform previousPos;
-        public BoxCollider _previousCollider;
 
+        public Transform currentSword;
+        public Transform previousSword;
 
-        public bool enabledHitDetection;
+        private Vector3 currentCenterPos;
+        private Vector3 previousCenterPos;
 
-        private Vector3 previousCenter;
+        private Quaternion currentRot;
+        private Quaternion previousRot;
 
         public float sphereSize = 0.3f;
 
         public Vector3 size;
-        
+
         private void OnDrawGizmos()
         {
-            if (enabledHitDetection)
-            {
-                previousCenter = previousPos.TransformPoint(_previousCollider.center);
-                Vector3 currentCenter = transform.TransformPoint(_collider.center);
-                                
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawSphere(previousCenter, sphereSize);
-                Gizmos.DrawSphere(currentCenter, sphereSize);
-                
-                Vector3 direction = (currentCenter - previousCenter).normalized;
-                Quaternion rotationDirection = Quaternion.LookRotation(direction, transform.up);
-                Quaternion rotationBounding = Quaternion.LookRotation(Vector3.Reflect((direction.normalized + transform.forward).normalized, direction).normalized * -1, transform.up);
-                
-                Vector3 center = (currentCenter + previousCenter) / 2f;
-                Gizmos.DrawLine(center, center + direction);// (direction.normalized + transform.forward).normalized);
+            currentCenterPos = currentSword.TransformPoint(_collider.center);
+            currentRot = currentSword.rotation;
 
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawSphere(center, sphereSize);
-                
-                Vector3 localTopLeftPoint = (_collider.size / 2) + _collider.center;
-                Vector3 worldTopLeftPoint = transform.TransformPoint(localTopLeftPoint);
-                
-                Vector3 localTopLeftPoint2 = (_collider.size / -2) + _previousCollider.center;
-                Vector3 worldTopLeftPoint2 = previousPos.TransformPoint(localTopLeftPoint2);
-                
-                Gizmos.color = Color.green;
-                
-                Gizmos.DrawSphere(worldTopLeftPoint, sphereSize / 2f);
-                Gizmos.DrawSphere(worldTopLeftPoint2, sphereSize / 2f);
+            previousCenterPos = previousSword.TransformPoint(_collider.center);
+            previousRot = previousSword.rotation;
+            
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawSphere(currentCenterPos, sphereSize);
+            Gizmos.DrawSphere(previousCenterPos, sphereSize);
 
-                var translateMatrix = Matrix4x4.Translate(center);
-                var rotationMatrix = Matrix4x4.Rotate(rotationDirection);
+            Vector3 direction = (currentCenterPos - previousCenterPos).normalized;
+            Quaternion rotationDirection = Quaternion.LookRotation(direction, transform.up);
+            
+            Vector3 center = (currentCenterPos + previousCenterPos) / 2f;
+            Gizmos.DrawLine(center, center + direction);
 
-                var trs = translateMatrix * rotationMatrix;
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawSphere(center, sphereSize);
 
-                
-                Gizmos.matrix = trs;
+            Vector3 localTopLeftPoint = (_collider.size / 2) + _collider.center;
+            Vector3 localBottomRightPoint = (_collider.size / -2) + _collider.center;
 
-                Gizmos.DrawWireCube(Vector3.zero, size);
-                
-/*                Gizmos.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
-                
-                var testPoint = Vector3.Reflect(direction, Vector3.up);
-                rotationBounding = Quaternion.LookRotation(testPoint, Vector3.up);
-                
-                rotationMatrix = Matrix4x4.Rotate(rotationBounding);
+            Gizmos.color = Color.green;
+            
+            //-------------------------------------------
+            
+            Matrix4x4 currentPosMatrix4X4 = Matrix4x4.Translate(currentSword.position);
+            Matrix4x4 previousPosMatrix4X4 = Matrix4x4.Translate(previousSword.position);
 
-                trs = rotationMatrix;
-                
-                Gizmos.matrix = trs;
-                
-                Gizmos.DrawLine(Vector3.zero, direction);*/
+            Matrix4x4 currentLocalRotMatrix4x4 = Matrix4x4.Rotate(currentRot);
+            Matrix4x4 previousLocalRotMatrix4x4 = Matrix4x4.Rotate(previousRot);
 
+            Matrix4x4 localTopPosMatrix4X4 = Matrix4x4.Translate(localTopLeftPoint);
+            Matrix4x4 localBottomPosMatrix4X4 = Matrix4x4.Translate(localBottomRightPoint);
 
-                Matrix4x4 localPosMatrix4X4 = Matrix4x4.Translate(localTopLeftPoint);
-                Matrix4x4 posMatrix = Matrix4x4.Translate(transform.position - center);
-                Matrix4x4 centerPosMatrix = Matrix4x4.Translate(center);
-                rotationMatrix = Matrix4x4.Rotate(Quaternion.Euler(Vector3.Scale(Quaternion.Lerp(transform.rotation, previousPos.rotation, 0.5f).eulerAngles, Vector3.right * -1)));
-                Matrix4x4 resultMatrix = posMatrix * rotationMatrix;
+            //Matrix4x4 rotationMatrix = Matrix4x4.Rotate(Quaternion.Euler(Vector3.Scale(Quaternion.Lerp(currentRot, previousRot, 0.5f).eulerAngles, Vector3.right * -1)));
+            Matrix4x4 rotationMatrix = Matrix4x4.Rotate(Quaternion.Euler(rotationDirection.eulerAngles));
+            //Matrix4x4 rotationMatrix = Matrix4x4.Rotate(rotationDirection);
+            
+            Vector3 topLeftCorrected = (rotationMatrix * localTopPosMatrix4X4 * currentPosMatrix4X4).MultiplyPoint(Vector3.zero);
+            Vector3 bottomRightCorrected = (rotationMatrix * previousLocalRotMatrix4x4 * localBottomPosMatrix4X4 * previousPosMatrix4X4).MultiplyPoint(Vector3.zero);
+            
+            Gizmos.DrawSphere(topLeftCorrected, sphereSize);
+            Gizmos.DrawSphere(bottomRightCorrected, sphereSize);
+            
+            //-------------------------------------------
 
-                Gizmos.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
+            Matrix4x4 bbTranslate = Matrix4x4.Translate(center);
+            Matrix4x4 bbRotate = Matrix4x4.Rotate(rotationDirection);
+
+            Matrix4x4 trs = bbTranslate * bbRotate;
                 
-                Vector3 testy = (rotationMatrix * localPosMatrix4X4).MultiplyPoint(Vector3.zero);
-                Gizmos.DrawSphere(testy, sphereSize);
-            }
+            Gizmos.matrix = trs;
+            Gizmos.DrawWireCube(Vector3.zero, size);
         }
     }
 }
