@@ -58,10 +58,10 @@ namespace Exiin
             Matrix4x4 localBottomPosMatrix4X4 = Matrix4x4.Translate(localBottomRightPoint);
 
             //Matrix4x4 rotationMatrix = Matrix4x4.Rotate(Quaternion.Euler(Vector3.Scale(Quaternion.Lerp(currentRot, previousRot, 0.5f).eulerAngles, Vector3.right * -1)));
-            Matrix4x4 rotationMatrix = Matrix4x4.Rotate(Quaternion.Euler(rotationDirection.eulerAngles));
+            Matrix4x4 rotationMatrix = Matrix4x4.Rotate(Quaternion.Euler(new Vector3(-rotationDirection.eulerAngles.x, 0,0)));
             //Matrix4x4 rotationMatrix = Matrix4x4.Rotate(rotationDirection);
             
-            Vector3 topLeftCorrected = (rotationMatrix * localTopPosMatrix4X4 * currentPosMatrix4X4).MultiplyPoint(Vector3.zero);
+            Vector3 topLeftCorrected = (rotationMatrix * currentLocalRotMatrix4x4 * localTopPosMatrix4X4 * currentPosMatrix4X4).MultiplyPoint(Vector3.zero);
             Vector3 bottomRightCorrected = (rotationMatrix * previousLocalRotMatrix4x4 * localBottomPosMatrix4X4 * previousPosMatrix4X4).MultiplyPoint(Vector3.zero);
             
             Gizmos.DrawSphere(topLeftCorrected, sphereSize);

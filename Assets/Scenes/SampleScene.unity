@@ -182,7 +182,7 @@ MonoBehaviour:
   currentSword: {fileID: 32932681}
   previousSword: {fileID: 158563862}
   sphereSize: 0.3
-  size: {x: 1, y: 1.39, z: 5.66}
+  size: {x: 0.72, y: 1.42, z: 5.66}
 --- !u!1 &158563860
 GameObject:
   m_ObjectHideFlags: 0
