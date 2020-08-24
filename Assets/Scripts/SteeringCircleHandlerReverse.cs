@@ -9,8 +9,12 @@ namespace None {
         public bool isReverse;
     }
 
-	public class SteeringCircleHandlerReverse : MonoBehaviour {
-		/// <summary>Mask for the raycast placement</summary>
+	public class SteeringCircleHandlerReverse : MonoBehaviour
+    {
+        /// <summary>Mask for the raycast placement</summary>
+
+        public bool constantUpdate;
+        
 		public LayerMask mask;
 
 		public Transform targetTransform;
@@ -38,7 +42,8 @@ namespace None {
 
         private void Update()
         {
-            //CalculateFormationPath();
+            if(constantUpdate)
+                CalculateFormationPath();
 
             if (previousUseComplexReverse != useComplexReverse)
             {
